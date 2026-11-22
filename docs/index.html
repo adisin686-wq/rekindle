@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Rekindle.now demo</title>
+<meta name="description" content="Rekindle.now: a memory for your network. Recorded interactive demo.">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+<style>
+ :root{--bg:#0E1420;--card:#151D2C;--card2:#1B2538;--line:#253147;--fg:#F1EDE6;--muted:#9AA5B8;--ember:#FF7A45;--teal:#5CC8B4;--wa:#25D366;--me:#DCF8C6}
+ *{box-sizing:border-box} html{scroll-behavior:smooth}
+ body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.5 Inter,system-ui,sans-serif}
+ a{color:var(--teal)}
+ .wrap{max-width:1120px;margin:0 auto;padding:0 16px}
+ header{padding:56px 0 24px}
+ .brand{font-family:Fraunces,Georgia,serif;font-size:clamp(44px,8vw,84px);font-weight:700;line-height:1;letter-spacing:-1px}
+ .brand span{color:var(--ember)}
+ .tag{font-size:clamp(18px,2.4vw,24px);color:var(--muted);max-width:720px;margin:14px 0 18px}
+ .pills{display:flex;gap:8px;flex-wrap:wrap}
+ .pill{font-size:13px;padding:5px 12px;border-radius:999px;background:var(--card2);color:var(--muted);text-decoration:none}
+ .pill.hl{color:var(--bg);background:var(--ember);font-weight:600}
+ section{padding:40px 0;border-top:1px solid var(--line)}
+ .step{font-size:13px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--ember)}
+ h2{font-family:Fraunces,Georgia,serif;font-size:clamp(28px,4vw,40px);margin:6px 0 8px;line-height:1.15}
+ .lead{color:var(--muted);max-width:720px;margin:0 0 24px}
+ .grid2{display:grid;grid-template-columns:minmax(0,420px) minmax(0,1fr);gap:28px;align-items:start}
+ @media(max-width:860px){.grid2{grid-template-columns:1fr}}
+ .phone{background:#0B141A;border:8px solid #1d2433;border-radius:36px;padding:14px;max-width:420px}
+ .phead{display:flex;align-items:center;gap:10px;padding:4px 6px 12px;border-bottom:1px solid #1f2c34}
+ .av{width:34px;height:34px;border-radius:50%;background:var(--ember);display:grid;place-items:center;font-weight:700;color:#14110f}
+ .chat{height:420px;overflow-y:auto;display:flex;flex-direction:column;gap:8px;padding:12px 4px}
+ .m{max-width:86%;padding:8px 11px;border-radius:12px;font-size:14.5px;line-height:1.4;white-space:pre-wrap;animation:pop .25s ease-out}
+ .m.u{align-self:flex-end;background:#005C4B;color:#E9EDEF}
+ .m.b{align-self:flex-start;background:#1F2C34;color:#E9EDEF}
+ .typing{align-self:flex-start;background:#1F2C34;border-radius:12px;padding:10px 14px;display:flex;gap:4px}
+ .typing i{width:7px;height:7px;border-radius:50%;background:#8696a0;animation:bl 1s infinite}.typing i:nth-child(2){animation-delay:.15s}.typing i:nth-child(3){animation-delay:.3s}
+ @keyframes bl{0%,100%{opacity:.3}50%{opacity:1}} @keyframes pop{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+ button{font:inherit;border:0;border-radius:12px;padding:12px 16px;font-weight:600;cursor:pointer;background:var(--card2);color:var(--fg)}
+ button.p{background:var(--ember);color:#1a0d06} button:disabled{opacity:.45;cursor:default}
+ .row{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+ .note{font-size:13px;color:var(--muted);margin-top:10px}
+ .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px}
+ .card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px;min-width:0}
+ .card.new{border-color:var(--ember);box-shadow:0 0 0 3px rgba(255,122,69,.15)}
+ .card h3{margin:0;font-family:Fraunces,Georgia,serif;font-size:21px} .meta{color:var(--muted);font-size:14px;margin:2px 0 8px}
+ .kv{font-size:14px;margin-top:6px} .kv b{color:var(--muted);font-weight:600}
+ .tags span{display:inline-block;font-size:12px;background:#1f2c44;color:#a9c0e6;border-radius:999px;padding:2px 9px;margin:6px 4px 0 0}
+ .badge{font-size:11px;font-weight:700;background:var(--ember);color:#1a0d06;border-radius:999px;padding:2px 8px;margin-left:8px;vertical-align:middle}
+ .tbtns{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px;margin-bottom:18px}
+ .tbtn{text-align:left;padding:14px 16px;background:var(--card);border:1px solid var(--line)}
+ .tbtn.on{border-color:var(--ember);background:#21170f}
+ .tbtn small{display:block;color:var(--ember);font-size:12px;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px}
+ .status{color:var(--muted);min-height:24px;margin-bottom:10px}
+ .nudge{display:grid;grid-template-columns:200px minmax(0,1fr);gap:16px}
+ @media(max-width:620px){.nudge{grid-template-columns:1fr}}
+ .nudge img{width:100%;border-radius:12px;display:block}
+ .why{color:var(--muted);font-size:14px;margin:4px 0 8px}
+ textarea{width:100%;min-height:130px;background:#0f1726;color:var(--fg);border:1px solid var(--line);border-radius:12px;padding:10px;font:14.5px/1.45 Inter,sans-serif;resize:vertical}
+ .wa{display:inline-block;background:var(--wa);color:#05210f;font-weight:700;text-decoration:none;padding:10px 14px;border-radius:10px;margin-top:8px}
+ .k{font-size:12px;font-weight:700;color:var(--ember);text-transform:uppercase;letter-spacing:1px}
+ .how{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px}
+ .how div{background:var(--card);border-radius:16px;padding:16px} .how b{font-family:Fraunces,Georgia,serif;font-size:20px;display:block;margin-bottom:4px}
+ footer{padding:40px 0 60px;color:var(--muted);font-size:14px;border-top:1px solid var(--line)}
+</style></head>
+<body>
+<div class="wrap">
+<header>
+ <div class="brand">Rekindle<span>.now</span></div>
+ <p class="tag">A memory for your network. It remembers who you met, where, and what you promised, then nudges you with a real reason to reconnect and the message already written.</p>
+ <div class="pills"><a class="pill hl" href="#capture">Try the demo ↓</a><a class="pill" href="voice.html">Voice demo</a><a class="pill" href="https://github.com/adisin686-wq/rekindle">Code on GitHub</a><span class="pill" id="rec"></span></div>
+</header>
+
+<section id="capture">
+ <div class="step">Step 1 · Capture</div>
+ <h2>Tell it about someone, however you talk</h2>
+ <p class="lead">Recorded from the real WhatsApp agent. Hinglish in, easy Hinglish back, with one or two pointed follow-up questions. Click to play each message.</p>
+ <div class="grid2">
+  <div>
+   <div class="phone"><div class="phead"><div class="av">R</div><div><b>Rekindle.now</b><div style="font-size:12px;color:#8696a0">WhatsApp agent</div></div></div>
+    <div class="chat" id="chat"></div></div>
+   <div class="row"><button class="p" id="next">Send next message</button><button id="replay">Replay</button></div>
+  </div>
+  <div>
+   <div class="k" style="margin-bottom:8px">What it saved</div>
+   <div id="saved" class="note">The memory card appears here once the conversation finishes.</div>
+  </div>
+ </div>
+</section>
+
+<section id="memory">
+ <div class="step">Step 2 · Memory</div>
+ <h2>Not a contact. A context.</h2>
+ <p class="lead">Where you met, what you talked about, the human detail, what each of you promised, and how they’ll remember you. Five people are fictional demo contacts; Meera was added by the chat above.</p>
+ <div class="cards" id="cards"></div>
+</section>
+
+<section id="nudges">
+ <div class="step">Step 3 · Nudge</div>
+ <h2>One trigger, a personal draft for each relevant person</h2>
+ <p class="lead">Pick a trigger. The engine reads it against everyone’s memory and writes a message only for people with a genuine link, with an infographic for context. Headlines are example triggers used for this recording.</p>
+ <div class="tbtns" id="tbtns"></div>
+ <div class="status" id="status"></div>
+ <div id="nlist" style="display:flex;flex-direction:column;gap:14px"></div>
+</section>
+
+<section>
+ <div class="step">How it works</div>
+ <h2>Five steps, one human decision</h2>
+ <div class="how">
+  <div><b>Capture</b>WhatsApp text, voice notes, card photos, contacts; Action Button voice; Apple Watch.</div>
+  <div><b>Remember</b>An AI agent turns rambling into 20+ fields and asks what’s missing.</div>
+  <div><b>Watch</b>Indian news RSS, topics you discussed, promises coming due, quiet relationships.</div>
+  <div><b>Draft</b>One message and infographic per relevant person, in their language.</div>
+  <div><b>You send</b>One tap opens WhatsApp with the draft. Nothing is sent without you.</div>
+ </div>
+</section>
+
+<footer>Built at Product Unconference 2026, Bangalore. This page replays a recorded run of the live app (real AI output); the full app runs on a server with WhatsApp, voice and live news. Contacts are fictional.</footer>
+</div>
+<script src="demo-data.js"></script>
+<script>
+const D = window.DEMO, $ = s => document.querySelector(s);
+const esc = s => (s ?? '').toString().replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+$('#rec').textContent = 'Recorded ' + D.recorded_at;
+const newest = D.contacts.find(c => c.name === 'Meera Nair');
+
+function card(c, isNew){
+  const L = (k, v) => v && v.length ? `<div class="kv"><b>${k}:</b> ${esc(Array.isArray(v) ? v.join('; ') : v)}</div>` : '';
+  return `<div class="card ${isNew?'new':''}"><h3>${esc(c.name)}${isNew?'<span class="badge">NEW</span>':''}</h3>
+   <div class="meta">${esc([c.role, c.company].filter(Boolean).join(' · '))}</div>
+   ${L('Met', [c.met_where, c.met_when].filter(Boolean).join(' · '))}${L('Talked about', c.topics)}${L('Memorable', c.memorable_details)}
+   ${L('You promised', c.my_promises)}${L('They promised', c.their_promises)}${L('Follow up by', c.followup_due)}
+   ${c.self_intro ? `<div class="kv"><b>They’ll know you as:</b> “${esc(c.self_intro)}”</div>` : ''}
+   <div class="tags">${(c.interest_tags||[]).map(t => `<span>${esc(t)}</span>`).join('')}</div></div>`;
+}
+$('#cards').innerHTML = D.contacts.map(c => card(c, c === newest)).join('');
+
+// --- chat replay ---
+let i = 0, busy = false;
+function addMsg(cls, t){ const d = document.createElement('div'); d.className = 'm ' + cls; d.textContent = t; $('#chat').appendChild(d); $('#chat').scrollTop = 1e9; }
+$('#next').onclick = () => {
+  if (busy || i >= D.chat.length) return; busy = true; $('#next').disabled = true;
+  const turn = D.chat[i++]; addMsg('u', turn.user);
+  const ty = document.createElement('div'); ty.className = 'typing'; ty.innerHTML = '<i></i><i></i><i></i>';
+  setTimeout(() => { $('#chat').appendChild(ty); $('#chat').scrollTop = 1e9; }, 300);
+  setTimeout(() => { ty.remove(); addMsg('b', turn.bot); busy = false;
+    if (i >= D.chat.length){ $('#next').textContent = 'Conversation done'; $('#saved').innerHTML = card(newest, true); }
+    else $('#next').disabled = false; }, 1600);
+};
+$('#replay').onclick = () => { i = 0; $('#chat').innerHTML = ''; $('#next').disabled = false; $('#next').textContent = 'Send next message';
+  $('#saved').innerHTML = '<div class="note">The memory card appears here once the conversation finishes.</div>'; };
+
+// --- triggers ---
+const byId = Object.fromEntries(D.nudges.map(n => [n.id, n]));
+$('#tbtns').innerHTML = D.triggers.map((t, k) => `<button class="tbtn" data-k="${k}"><small>${esc(t.kind)}</small>${esc(t.label)}</button>`).join('');
+document.querySelectorAll('.tbtn').forEach(b => b.onclick = () => {
+  document.querySelectorAll('.tbtn').forEach(x => x.classList.toggle('on', x === b));
+  const t = D.triggers[+b.dataset.k], ns = t.nudge_ids.map(id => byId[id]).filter(Boolean);
+  $('#nlist').innerHTML = ''; $('#status').textContent = `Reading “${t.title}” against ${D.contacts.length} people…`;
+  setTimeout(() => {
+    $('#status').textContent = `${ns.length} ${ns.length === 1 ? 'person has' : 'people have'} a genuine reason to hear from you. (Live run took ${t.secs}s.)`;
+    $('#nlist').innerHTML = ns.map(n => `<div class="card nudge">
+      ${n.img_url ? `<img src="${n.img_url}" alt="Infographic sent with the draft to ${esc(n.contact_name)}">` : '<div></div>'}
+      <div style="min-width:0"><div class="k">${esc(n.trigger_kind)}</div><h3 style="font-family:Fraunces,Georgia,serif;margin:2px 0">${esc(n.contact_name)}</h3>
+      <div class="why">${esc(n.reason)}</div>
+      <textarea aria-label="Draft message to ${esc(n.contact_name)}">${esc(n.draft)}</textarea>
+      <a class="wa" target="_blank" rel="noopener" href="#">Open in WhatsApp with this draft</a></div></div>`).join('');
+    $('#nlist').querySelectorAll('.nudge').forEach(el => { const ta = el.querySelector('textarea'), a = el.querySelector('.wa');
+      const upd = () => a.href = 'https://wa.me/?text=' + encodeURIComponent(ta.value); upd(); ta.oninput = upd; });
+  }, 1100);
+});
+</script>
+</body></html>

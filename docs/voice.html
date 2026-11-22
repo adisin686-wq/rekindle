@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Rekindle.now voice demo</title>
+<style>
+ :root{--bg:#0b1220;--fg:#eef2f8;--muted:#8a97ad;--you:#ff7a45;--ai:#4fd1b5}
+ *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+ html,body{margin:0;height:100%;background:var(--bg);color:var(--fg);font-family:-apple-system,BlinkMacSystemFont,Inter,sans-serif;overflow:hidden}
+ body{display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:calc(env(safe-area-inset-top) + 18px) 16px calc(env(safe-area-inset-bottom) + 18px)}
+ header{width:100%;max-width:520px;display:flex;justify-content:space-between;align-items:center}
+ .brand{font-weight:700} .brand b{color:var(--you)} header a{color:var(--muted);font-size:14px}
+ #stage{position:relative;width:240px;height:240px;display:flex;align-items:center;justify-content:center;cursor:pointer}
+ .orb{width:140px;height:140px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#3a4a6b,#1a2338);transition:transform .12s,opacity .3s}
+ .ring{position:absolute;inset:50px;border-radius:50%;border:3px solid var(--you);opacity:0}
+ body.listening .orb{background:radial-gradient(circle at 35% 30%,#ffb08a,var(--you));transform:scale(calc(1 + var(--lvl,0)*.35))}
+ body.listening .ring{animation:ripple 1.6s infinite ease-out} body.listening .r2{animation-delay:.5s} body.listening .r3{animation-delay:1s}
+ @keyframes ripple{0%{transform:scale(1);opacity:.7}100%{transform:scale(1.9);opacity:0}}
+ body.thinking .orb{background:conic-gradient(from 0deg,var(--ai),#1a2338,var(--you),#1a2338,var(--ai));animation:spin 1.1s linear infinite}
+ @keyframes spin{to{transform:rotate(360deg)}}
+ .bars{position:absolute;display:none;gap:7px;align-items:center;height:110px}
+ .bars i{width:10px;border-radius:6px;background:var(--ai);height:20px;animation:eq .9s infinite ease-in-out}
+ .bars i:nth-child(2){animation-delay:.1s}.bars i:nth-child(3){animation-delay:.25s}.bars i:nth-child(4){animation-delay:.4s}.bars i:nth-child(5){animation-delay:.15s}.bars i:nth-child(6){animation-delay:.3s}.bars i:nth-child(7){animation-delay:.05s}
+ @keyframes eq{0%,100%{height:16px}50%{height:100px}}
+ body.speaking .orb{opacity:.15;transform:scale(1.3)} body.speaking .bars{display:flex}
+ #status{font-size:15px;color:var(--muted);min-height:20px;text-align:center}
+ #transcript{width:100%;max-width:520px;height:34vh;overflow-y:auto;display:flex;flex-direction:column;gap:10px}
+ .msg{padding:10px 14px;border-radius:16px;max-width:86%;font-size:16px;line-height:1.35}
+ .msg.you{align-self:flex-end;background:#2a1d17;border:1px solid #5a3424} .msg.ai{align-self:flex-start;background:#11282a;border:1px solid #1f4d47}
+ footer{width:100%;max-width:520px;display:flex;flex-direction:column;gap:8px}
+ button{border:0;border-radius:14px;padding:14px;font-size:16px;font-weight:600;background:var(--you);color:#1b0d06;width:100%}
+ .note{font-size:12px;color:var(--muted);text-align:center}
+</style></head>
+<body class="idle">
+ <header><div class="brand">Rekindle<b>.now</b></div><a href="index.html">← Demo</a></header>
+ <div id="stage"><div class="ring"></div><div class="ring r2"></div><div class="ring r3"></div><div class="orb"></div><div class="bars"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></div>
+ <div id="status">Replay of a recorded voice session</div>
+ <div id="transcript"></div>
+ <footer><button id="main">▶ Play the conversation</button>
+ <div class="note">In the app, the iPhone Action Button opens this screen and you talk live. Tap the orb while it speaks to interrupt.</div></footer>
+<script src="demo-data.js"></script>
+<script>
+const $ = s => document.querySelector(s), turns = window.DEMO.chat;
+let idx = 0, state = 'idle', timers = [], lvlT;
+const later = (f, ms) => timers.push(setTimeout(f, ms));
+function clear(){ timers.forEach(clearTimeout); timers = []; clearInterval(lvlT); try{ speechSynthesis.cancel(); }catch(e){} }
+function setState(s, msg){ state = s; document.body.className = s; $('#status').textContent = msg || ''; }
+function add(cls, t){ const d = document.createElement('div'); d.className = 'msg ' + cls; d.textContent = t; $('#transcript').appendChild(d); $('#transcript').scrollTop = 1e9; return d; }
+function listen(){
+  if (idx >= turns.length){ setState('idle', 'Saved to memory ✓'); $('#main').textContent = '↺ Replay'; return; }
+  const words = turns[idx].user.split(' '), el = add('you', ''); let w = 0;
+  setState('listening', 'Listening… (you speaking)');
+  lvlT = setInterval(() => document.body.style.setProperty('--lvl', Math.random()), 120);
+  const step = () => { el.textContent = words.slice(0, ++w).join(' '); $('#transcript').scrollTop = 1e9;
+    if (w < words.length) later(step, 170); else { clearInterval(lvlT); later(think, 500); } };
+  later(step, 300);
+}
+function think(){ setState('thinking', 'Remembering…'); later(speak, 1100); }
+function speak(){
+  const t = turns[idx++].bot; add('ai', t); setState('speaking', 'Tap the orb to interrupt');
+  let done = false; const next = () => { if (done) return; done = true; later(listen, 400); };
+  try { const u = new SpeechSynthesisUtterance(t.replace(/[*_]/g, ''));
+    const v = speechSynthesis.getVoices().find(v => v.lang === 'en-IN'); if (v){ u.voice = v; u.lang = v.lang; }
+    u.onend = next; speechSynthesis.speak(u); } catch(e){}
+  later(next, Math.max(3500, t.length * 65));
+}
+$('#main').onclick = () => { clear(); if (idx >= turns.length || state !== 'idle'){ idx = 0; $('#transcript').innerHTML = ''; }
+  $('#main').textContent = '■ Restart'; listen(); };
+$('#stage').onclick = () => { if (state === 'speaking'){ clear(); setState('listening', 'Interrupted, listening…'); later(listen, 300); } };
+try { speechSynthesis.getVoices(); } catch(e){}
+</script>
+</body></html>
