@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Rekindle.now">
+<title>Rekindle.now Voice</title>
+<style>
+  :root { --bg:#0b1220; --fg:#eef2f8; --muted:#8a97ad; --you:#ff7a45; --ai:#4fd1b5; }
+  * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html,body { margin:0; height:100%; background:var(--bg); color:var(--fg);
+    font-family:-apple-system,BlinkMacSystemFont,"Inter",sans-serif; overflow:hidden; }
+  body { display:flex; flex-direction:column; align-items:center; justify-content:space-between;
+    padding:calc(env(safe-area-inset-top) + 18px) 20px calc(env(safe-area-inset-bottom) + 18px); }
+  header { width:100%; display:flex; justify-content:space-between; align-items:center; }
+  .brand { font-weight:700; letter-spacing:.3px; } .brand b { color:var(--you); }
+  .lang { display:flex; gap:6px; }
+  .lang button { background:#18233a; color:var(--muted); border:0; border-radius:999px; padding:6px 12px; font-size:13px; }
+  .lang button.on { background:#24375a; color:var(--fg); }
+  #stage { position:relative; width:260px; height:260px; display:flex; align-items:center; justify-content:center; }
+  .orb { width:150px; height:150px; border-radius:50%; background:radial-gradient(circle at 35% 30%, #3a4a6b, #1a2338);
+    transition:all .3s; box-shadow:0 0 0 0 rgba(255,122,69,0); }
+  .ring { position:absolute; inset:55px; border-radius:50%; border:3px solid var(--you); opacity:0; }
+  body.listening .orb { background:radial-gradient(circle at 35% 30%, #ffb08a, var(--you)); transform:scale(calc(1 + var(--lvl,0)*.35)); }
+  body.listening .ring { animation:ripple 1.6s infinite ease-out; }
+  body.listening .ring.r2 { animation-delay:.5s; } body.listening .ring.r3 { animation-delay:1s; }
+  @keyframes ripple { 0%{transform:scale(1);opacity:.7} 100%{transform:scale(1.9);opacity:0} }
+  body.thinking .orb { background:conic-gradient(from 0deg, var(--ai), #1a2338, var(--you), #1a2338, var(--ai)); animation:spin 1.1s linear infinite; }
+  @keyframes spin { to { transform:rotate(360deg) } }
+  .bars { position:absolute; display:none; gap:7px; align-items:center; height:120px; }
+  .bars i { width:10px; border-radius:6px; background:var(--ai); height:20px; animation:eq 0.9s infinite ease-in-out; }
+  .bars i:nth-child(2){animation-delay:.1s}.bars i:nth-child(3){animation-delay:.25s}.bars i:nth-child(4){animation-delay:.4s}
+  .bars i:nth-child(5){animation-delay:.15s}.bars i:nth-child(6){animation-delay:.3s}.bars i:nth-child(7){animation-delay:.05s}
+  @keyframes eq { 0%,100%{height:16px} 50%{height:110px} }
+  body.speaking .orb { opacity:.15; transform:scale(1.3); }
+  body.speaking .bars { display:flex; }
+  #status { font-size:15px; color:var(--muted); min-height:20px; text-align:center; }
+  #transcript { width:100%; max-width:520px; height:34vh; overflow-y:auto; display:flex; flex-direction:column; gap:10px; }
+  .msg { padding:10px 14px; border-radius:16px; max-width:86%; font-size:16px; line-height:1.35; }
+  .msg.you { align-self:flex-end; background:#2a1d17; border:1px solid #5a3424; }
+  .msg.ai { align-self:flex-start; background:#11282a; border:1px solid #1f4d47; }
+  .msg.live { opacity:.65; font-style:italic; }
+  footer { width:100%; max-width:520px; display:flex; gap:10px; }
+  footer button { flex:1; border:0; border-radius:14px; padding:14px; font-size:16px; font-weight:600; background:#18233a; color:var(--fg); }
+  #main { background:var(--you); color:#1b0d06; flex:2; }
+</style>
+</head>
+<body class="idle">
+  <header>
+    <div class="brand">Rekindle<b>.now</b></div>
+    <div class="lang"><button data-l="en-IN" class="on">EN</button><button data-l="hi-IN">हिंदी/Hinglish</button></div>
+  </header>
+  <div id="stage"><div class="ring"></div><div class="ring r2"></div><div class="ring r3"></div><div class="orb"></div>
+    <div class="bars"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></div>
+  <div id="status">Tap and tell me who you just met</div>
+  <div id="transcript"></div>
+  <footer><button id="newp">New person</button><button id="main">Tap to talk</button></footer>
+<script>
+const $ = s => document.querySelector(s);
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+let lang = localStorageGet('rk_lang') || 'en-IN', rec = null, finalText = '', state = 'idle', liveEl = null, silenceT = null;
+let audioCtx, analyser, micStream, rafId;
+function localStorageGet(k){ try { return localStorage.getItem(k) } catch(e){ return null } }
+function localStorageSet(k,v){ try { localStorage.setItem(k,v) } catch(e){} }
+document.querySelectorAll('.lang button').forEach(b => { b.classList.toggle('on', b.dataset.l===lang);
+  b.onclick = () => { lang=b.dataset.l; localStorageSet('rk_lang',lang); document.querySelectorAll('.lang button').forEach(x=>x.classList.toggle('on',x===b)); }; });
+
+function setState(s, msg){ state=s; document.body.className=s; $('#status').textContent = msg||'';
+  $('#main').textContent = {idle:'Tap to talk', listening:'Done — send', thinking:'…', speaking:'Interrupt & talk'}[s]; }
+function add(cls, text){ const d=document.createElement('div'); d.className='msg '+cls; d.textContent=text; $('#transcript').appendChild(d); $('#transcript').scrollTop=1e9; return d; }
+
+async function meter(){ // drives the orb size from mic level so you SEE your voice registering
+  try {
+    if(!micStream){ micStream = await navigator.mediaDevices.getUserMedia({audio:true});
+      audioCtx = new (window.AudioContext||window.webkitAudioContext)(); analyser = audioCtx.createAnalyser();
+      audioCtx.createMediaStreamSource(micStream).connect(analyser); analyser.fftSize=256; }
+    const buf = new Uint8Array(analyser.frequencyBinCount);
+    const loop = () => { analyser.getByteFrequencyData(buf); let s=0; for(const v of buf) s+=v;
+      document.body.style.setProperty('--lvl', Math.min(1, s/buf.length/60)); rafId=requestAnimationFrame(loop); };
+    cancelAnimationFrame(rafId); loop();
+  } catch(e) {}
+}
+
+function listen(){
+  speechSynthesis.cancel();
+  if(!SR){ const t = prompt('Speech recognition not available here — type instead:'); if(t) send(t); return; }
+  finalText=''; rec = new SR(); rec.lang = lang; rec.interimResults = true; rec.continuous = true;
+  liveEl = add('you live', '…');
+  rec.onresult = e => { let interim=''; finalText='';
+    for(const r of e.results){ if(r.isFinal) finalText += r[0].transcript+' '; else interim += r[0].transcript; }
+    liveEl.textContent = (finalText+interim).trim() || '…';
+    clearTimeout(silenceT); silenceT = setTimeout(()=>{ if(state==='listening') stopAndSend(); }, 2200); };
+  rec.onerror = e => { if(e.error!=='aborted' && e.error!=='no-speech') $('#status').textContent='Mic: '+e.error; };
+  rec.onend = () => { if(state==='listening') stopAndSend(); };
+  rec.start(); meter(); setState('listening', lang==='hi-IN' ? 'Sun raha hoon… bolte rahiye' : "I'm listening…");
+}
+function stopAndSend(){
+  clearTimeout(silenceT); const text = (liveEl && liveEl.textContent!=='…') ? liveEl.textContent : finalText.trim();
+  try{ rec && rec.stop(); }catch(e){} rec=null; cancelAnimationFrame(rafId);
+  if(liveEl){ liveEl.classList.remove('live'); if(!text) liveEl.remove(); }
+  if(text) send(text); else setState('idle','Didn\'t catch that — tap to try again');
+}
+async function send(text){
+  setState('thinking', lang==='hi-IN' ? 'Yaad kar raha hoon…' : 'Remembering…');
+  try {
+    const r = await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({channel:'voice',text})});
+    const j = await r.json(); add('ai', j.reply); speak(j.reply);
+  } catch(e){ setState('idle','Network issue — tap to retry'); }
+}
+function pickVoice(){ const vs = speechSynthesis.getVoices();
+  return vs.find(v=>v.lang==='en-IN') || vs.find(v=>v.lang.startsWith('hi')) || vs.find(v=>v.lang.startsWith('en')); }
+function speak(text){
+  const u = new SpeechSynthesisUtterance(text.replace(/[*_]/g,'')); const v = pickVoice(); if(v){ u.voice=v; u.lang=v.lang; }
+  u.rate = 1.05; u.onend = () => { if(state==='speaking'){ listen(); } };  // hands-free: auto-listen after it speaks
+  setState('speaking', 'Tap anywhere to interrupt'); speechSynthesis.speak(u);
+}
+$('#main').onclick = () => { if(state==='idle') listen(); else if(state==='listening') stopAndSend(); else if(state==='speaking'){ speechSynthesis.cancel(); listen(); } };
+$('#stage').onclick = () => { if(state==='speaking'){ speechSynthesis.cancel(); listen(); } else if(state==='idle') listen(); };
+$('#transcript').onclick = $('#stage').onclick;
+$('#newp').onclick = async () => { speechSynthesis.cancel(); await fetch('/api/reset-session',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({channel:'voice'})});
+  $('#transcript').innerHTML=''; setState('idle','New person — tap and talk'); };
+speechSynthesis.getVoices();
+if(new URLSearchParams(location.search).has('auto')) setState('idle','Tap the orb to start');
+</script>
+</body>
+</html>

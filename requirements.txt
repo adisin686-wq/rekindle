@@ -1,0 +1,9 @@
+fastapi
+uvicorn
+anthropic
+httpx
+feedparser
+pillow
+python-multipart
+python-dotenv
+faster-whisper

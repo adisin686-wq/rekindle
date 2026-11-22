@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Rekindle.now</title>
+<style>
+ :root{--bg:#0b1220;--card:#131c2e;--line:#22304a;--fg:#eef2f8;--muted:#8a97ad;--acc:#ff7a45;--ai:#4fd1b5;--wa:#25d366}
+ *{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--fg);font-family:-apple-system,BlinkMacSystemFont,"Inter",sans-serif}
+ header{display:flex;align-items:center;justify-content:space-between;padding:16px 22px;border-bottom:1px solid var(--line);flex-wrap:wrap;gap:10px}
+ .brand{font-size:22px;font-weight:800}.brand b{color:var(--acc)} .sub{color:var(--muted);font-size:13px}
+ .pill{font-size:12px;padding:4px 10px;border-radius:999px;background:#1a2540;color:var(--muted);margin-left:6px}
+ .pill.ok{color:var(--wa)}
+ main{display:grid;grid-template-columns:360px 1fr 380px;gap:16px;padding:16px}
+ @media(max-width:1100px){main{grid-template-columns:1fr}}
+ .col{display:flex;flex-direction:column;gap:12px;min-width:0}
+ h2{font-size:13px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin:4px 2px}
+ .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px}
+ .contact h3{margin:0;font-size:17px} .contact .meta{color:var(--muted);font-size:13px;margin:3px 0 8px}
+ .tags span{display:inline-block;font-size:11px;background:#1b2a46;color:#a9c0e6;border-radius:999px;padding:2px 8px;margin:2px 3px 2px 0}
+ .kv{font-size:13px;line-height:1.45;margin-top:6px} .kv b{color:var(--muted);font-weight:600}
+ .chat{height:340px;overflow-y:auto;display:flex;flex-direction:column;gap:8px;background:#0b1424;border-radius:12px;padding:10px}
+ .m{max-width:85%;padding:8px 11px;border-radius:12px;font-size:14px;line-height:1.35;white-space:pre-wrap}
+ .m.in{align-self:flex-end;background:#1f3b2c} .m.out{align-self:flex-start;background:#1c2740}
+ input,textarea,select{width:100%;background:#0e1626;color:var(--fg);border:1px solid #26344f;border-radius:10px;padding:9px;font-size:14px;font-family:inherit}
+ button{background:#1d2a44;color:var(--fg);border:0;border-radius:10px;padding:9px 12px;font-size:14px;font-weight:600;cursor:pointer}
+ button.p{background:var(--acc);color:#1b0d06} button:disabled{opacity:.5}
+ .row{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap} .row>*{flex:1}
+ .nudge{display:grid;grid-template-columns:120px 1fr;gap:12px} .nudge img{width:120px;border-radius:10px}
+ .nudge .draft{font-size:14px;line-height:1.4;background:#0e1626;border-radius:10px;padding:8px;margin:6px 0;white-space:pre-wrap}
+ .wa{background:var(--wa);color:#05210f;text-decoration:none;padding:7px 10px;border-radius:9px;font-weight:700;font-size:13px;display:inline-block}
+ .k{font-size:11px;font-weight:800;color:var(--acc);text-transform:uppercase}
+ .muted{color:var(--muted);font-size:13px}
+ .tabs{display:flex;gap:6px;flex-wrap:wrap} .tabs button.on{background:var(--acc);color:#1b0d06}
+</style></head>
+<body>
+<header><div><div class="brand">Rekindle<b>.now</b></div><div class="sub">A memory for your network — remembers who, where, what & why, then nudges you with a real reason to reconnect.</div></div>
+<div id="status"></div></header>
+<main>
+ <section class="col">
+  <h2>Capture — WhatsApp simulator</h2>
+  <div class="card">
+   <div class="tabs" id="chtabs"><button data-c="sim" class="on">Simulator</button><button data-c="wa">Your WhatsApp</button><button data-c="voice">Voice</button><button data-c="watch">Watch</button></div>
+   <div class="chat" id="chat" style="margin-top:10px"></div>
+   <div class="row"><input id="msg" placeholder="e.g. Met Arjun from Zepto at the unconference, talked about dark store unit economics"></div>
+   <div class="row"><button class="p" id="send">Send</button><button id="newc">New person</button></div>
+   <div class="row"><label class="muted" style="flex:2">📇 Card / badge / LinkedIn screenshot <input type="file" id="file" accept="image/*"></label></div>
+   <div class="row"><button id="vcardbtn">Share a contact card</button><button id="libtn">Paste LinkedIn URL</button></div>
+  </div>
+  <h2>More capture triggers</h2>
+  <div class="card">
+   <div class="muted">📅 Calendar: meeting just ended</div>
+   <div class="row"><input id="calp" placeholder="Person" value="Karan Mehta"><input id="calm" placeholder="Meeting" value="Coffee chat: AI in insurance"></div>
+   <div class="row"><button id="calbtn">Ping me for context</button></div>
+   <div class="muted" style="margin-top:12px">📍 Event check-in (calendar/location)</div>
+   <div class="row"><button id="evbtn">"You're at Unconference — met anyone?"</button></div>
+   <div class="muted" style="margin-top:12px">✉️ Forward an email / LinkedIn thread</div>
+   <div class="row"><textarea id="fwd" rows="3" placeholder="Paste a thread here…"></textarea></div>
+   <div class="row"><button id="fwdbtn">Remember from thread</button></div>
+   <div class="muted" style="margin-top:12px">🎙️ Voice: <a href="/voice" style="color:var(--ai)">/voice</a> (iPhone Action Button) · ⌚ Watch: POST /api/watch</div>
+  </div>
+ </section>
+ <section class="col">
+  <h2>Nudges — one trigger, many drafts</h2>
+  <div class="card">
+   <div class="row"><button class="p" id="news">📰 Scan Indian news now</button><button id="due">⏰ Follow-ups due / going cold</button></div>
+   <div class="row"><input id="trig" placeholder="Topic movement, e.g. RBI allows credit lines on UPI for small merchants"><button id="trigbtn" style="flex:0 0 auto">Fire trigger</button></div>
+   <div class="muted" id="busy" style="margin-top:6px"></div>
+  </div>
+  <div id="nudges" class="col"></div>
+ </section>
+ <section class="col">
+  <h2>Memory — your people</h2>
+  <div class="row" style="margin:0"><button id="seed">Load demo contacts</button></div>
+  <div id="contacts" class="col"></div>
+ </section>
+</main>
+<script>
+const $=s=>document.querySelector(s); let channel='sim', cfg={};
+const post=(u,b)=>fetch(u,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(b||{})}).then(r=>r.json());
+const esc=s=>(s??'').toString().replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+async function loadCfg(){ cfg=await (await fetch('/api/config')).json();
+  $('#status').innerHTML=`<span class="pill ${cfg.anthropic?'ok':''}">AI ${cfg.anthropic?'✓':'✗'}</span><span class="pill ${cfg.twilio?'ok':''}">WhatsApp ${cfg.twilio?'✓':'✗'}</span><span class="pill">📍 ${esc(cfg.event)}</span>`; }
+function chName(){ return channel==='wa' ? 'wa:'+(cfg.my_wa_num||'') : channel; }
+async function loadChat(){ let ch=channel; if(channel==='wa'){ const all=await (await fetch('/api/config')).json(); ch='wa:'+(window.MYWA||''); }
+  const l=await (await fetch('/api/log?channel='+encodeURIComponent(ch))).json();
+  $('#chat').innerHTML=l.map(m=>`<div class="m ${m.direction}">${esc(m.body)}</div>`).join(''); $('#chat').scrollTop=1e9; }
+async function loadContacts(){ const cs=await (await fetch('/api/contacts')).json();
+  $('#contacts').innerHTML=cs.map(c=>`<div class="card contact"><h3>${esc(c.name)}</h3>
+   <div class="meta">${esc([c.role,c.company].filter(Boolean).join(' · '))}</div>
+   <div class="kv"><b>Met:</b> ${esc(c.met_where||'?')} · ${esc(c.met_when||'?')}${c.met_context?' — '+esc(c.met_context):''}</div>
+   ${c.topics?.length?`<div class="kv"><b>Talked about:</b> ${esc(c.topics.join(', '))}</div>`:''}
+   ${c.memorable_details?.length?`<div class="kv"><b>Memorable:</b> ${esc(c.memorable_details.join(', '))}</div>`:''}
+   ${c.my_promises?.length?`<div class="kv"><b>You promised:</b> ${esc(c.my_promises.join('; '))}</div>`:''}
+   ${c.their_promises?.length?`<div class="kv"><b>They promised:</b> ${esc(c.their_promises.join('; '))}</div>`:''}
+   ${c.followup_due?`<div class="kv"><b>Follow up by:</b> ${esc(c.followup_due)} via ${esc(c.followup_channel||'?')}</div>`:''}
+   ${c.self_intro?`<div class="kv"><b>They'll know you as:</b> “${esc(c.self_intro)}”</div>`:''}
+   <div class="tags" style="margin-top:6px">${(c.interest_tags||[]).map(t=>`<span>${esc(t)}</span>`).join('')}</div></div>`).join('') || '<div class="muted">No one yet — capture someone or load demo contacts.</div>'; }
+async function loadNudges(){ const ns=await (await fetch('/api/nudges')).json();
+  $('#nudges').innerHTML=ns.map(n=>`<div class="card nudge">${n.img_url?`<a href="/n/${n.id}" target="_blank"><img src="${n.img_url}"></a>`:'<div></div>'}
+   <div><div class="k">${esc(n.trigger_kind)} · ${esc(n.status)}</div><b>${esc(n.contact_name)}</b> <span class="muted">— ${esc(n.reason)}</span>
+   <div class="muted" style="margin-top:4px">Trigger: ${esc(n.trigger_title)}</div>
+   <div class="draft">${esc(n.draft)}</div>
+   <a class="wa" href="${n.wa_link}" target="_blank">Open in WhatsApp</a> <a class="wa" style="background:#1d2a44;color:#eef2f8" href="/n/${n.id}" target="_blank">Nudge page</a></div></div>`).join(''); }
+function refresh(){ loadChat(); loadContacts(); loadNudges(); }
+async function send(extra){ const text=$('#msg').value.trim(); if(!text && !extra) return;
+  $('#msg').value=''; if(channel!=='sim'){channel='sim'; setTab();}
+  $('#chat').insertAdjacentHTML('beforeend',`<div class="m in">${esc(text||'[attachment]')}</div><div class="m out muted">…</div>`); $('#chat').scrollTop=1e9;
+  await post('/api/chat',{channel:'sim',text,...(extra||{})}); refresh(); }
+async function busy(label,fn){ $('#busy').textContent=label; try{ const r=await fn(); $('#busy').textContent=`Created ${(r.nudges||[]).length} nudge(s).`; }catch(e){ $('#busy').textContent='Error: '+e; } refresh(); }
+function setTab(){ document.querySelectorAll('#chtabs button').forEach(b=>b.classList.toggle('on',b.dataset.c===channel)); loadChat(); }
+document.querySelectorAll('#chtabs button').forEach(b=>b.onclick=()=>{channel=b.dataset.c; setTab();});
+$('#send').onclick=()=>send(); $('#msg').onkeydown=e=>{ if(e.key==='Enter') send(); };
+$('#newc').onclick=async()=>{ await post('/api/reset-session',{channel:'sim'}); $('#chat').insertAdjacentHTML('beforeend','<div class="m out">New person ✨</div>'); };
+$('#file').onchange=e=>{ const f=e.target.files[0]; if(!f) return; const r=new FileReader(); r.onload=()=>send({image:r.result}); r.readAsDataURL(f); };
+$('#vcardbtn').onclick=()=>send({vcard:"BEGIN:VCARD\nVERSION:3.0\nFN:Meera Nair\nORG:Swiggy\nTITLE:Senior PM, Instamart\nTEL;TYPE=CELL:+91 98450 00000\nEND:VCARD"});
+$('#libtn').onclick=()=>{ $('#msg').value='https://www.linkedin.com/in/arjun-bhatia-pm/ — met him at lunch today'; send(); };
+$('#fwdbtn').onclick=()=>{ $('#msg').value='Forwarded thread:\n'+$('#fwd').value; $('#fwd').value=''; send(); };
+$('#calbtn').onclick=async()=>{ await post('/api/calendar-ping',{person:$('#calp').value,meeting:$('#calm').value}); channel=window.MYWA?'wa':'sim'; setTab(); };
+$('#evbtn').onclick=async()=>{ await post('/api/event-checkin',{}); channel=window.MYWA?'wa':'sim'; setTab(); };
+$('#news').onclick=()=>busy('Reading ET, Mint, Inc42, YourStory, Moneycontrol… matching to your people…',()=>post('/api/scan/news'));
+$('#due').onclick=()=>busy('Checking promises and cooling relationships…',()=>post('/api/scan/due'));
+$('#trigbtn').onclick=()=>{ const t=$('#trig').value.trim(); if(!t) return; busy('Finding who cares about this…',()=>post('/api/trigger',{title:t,kind:'topic movement'})); };
+$('#seed').onclick=async()=>{ await post('/api/seed'); refresh(); };
+(async()=>{ await loadCfg(); const c=await (await fetch('/api/config')).json(); window.MYWA=c.my_wa_num||''; refresh(); setInterval(refresh,6000); })();
+</script></body></html>
